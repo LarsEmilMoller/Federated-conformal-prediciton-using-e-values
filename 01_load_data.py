@@ -10,6 +10,10 @@ Created on Wed Oct 14 14:30:06 2026
 from pathlib import Path
 from torchvision import datasets, transforms
 
+"""
+Script for downloading the CIFAR-10 and CIFAR-100 data sets.
+"""
+
 # Set the dataset directory relative to this script
 data_dir = Path(__file__).resolve().parent / "data"
 
