@@ -17,11 +17,11 @@ Prepare CIFAR-10 for federated conformal prediction.
 
 Paper-style non-IID partition:
 
-Client 0: airplane, automobile
-Client 1: bird, cat
-Client 2: deer, dog
-Client 3: frog, horse
-Client 4: ship, truck
+Client 1: airplane, automobile
+Client 2: bird, cat
+Client 3: deer, dog
+Client 4: frog, horse
+Client 5: ship, truck
 
 Each client receives:
     80% training data
@@ -109,13 +109,13 @@ if __name__ == "__main__":
 
     client_data = create_client_splits(train_dataset)
 
-    print("\nPaper-style CIFAR-10 partition\n")
+    print("Federated CIFAR-10 partition\n")
 
     for client_id, data in client_data.items():
 
         print(f"Client {client_id}")
         print(f"Classes: {data['classes']}")
-        print(f"Train size: {len(data['train'])}")
+        print(f"Train dataset size: {len(data['train'])}")
         print(
             f"Calibration size: "
             f"{len(data['calibration'])}"
