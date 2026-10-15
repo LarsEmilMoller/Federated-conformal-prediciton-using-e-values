@@ -6,7 +6,6 @@ Created on Wed Oct 14 17:42:35 2026
 @author: livboethrysoe
 """
 
-
 from copy import deepcopy
 from pathlib import Path
 
@@ -28,8 +27,9 @@ DATASET_NAME = "CIFAR10"
 NUM_ROUNDS = 50
 LOCAL_EPOCHS = 2
 
-BATCH_SIZE = 128
-LEARNING_RATE = 0.001
+BATCH_SIZE = 64
+LEARNING_RATE = 0.01
+MOMENTUM = 0.9
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 RESULTS_DIR = SCRIPT_DIR / "results"
@@ -69,16 +69,18 @@ def train_client(model, dataset):
 
     criterion = nn.CrossEntropyLoss()
 
-    optimizer = torch.optim.Adam(
+    optimizer = torch.optim.SGD(
         model.parameters(),
         lr=LEARNING_RATE,
+        momentum=MOMENTUM,
     )
 
     model.train()
 
-    for epoch in range(LOCAL_EPOCHS):
+    total_loss = 0.0
+    num_batches = 0
 
-        running_loss = 0.0
+    for epoch in range(LOCAL_EPOCHS):
 
         for images, labels in loader:
 
@@ -97,38 +99,43 @@ def train_client(model, dataset):
             loss.backward()
             optimizer.step()
 
-            running_loss += loss.item()
+            total_loss += loss.item()
+            num_batches += 1
 
-    return model.state_dict()
+    average_loss = total_loss / num_batches
+
+    return model.state_dict(), average_loss
 
 
 # --------------------------------------------------
 # FedAvg aggregation
 # --------------------------------------------------
 
-def average_weights(client_weights):
+def average_weights(client_weight_dicts):
     """
     Standard FedAvg parameter averaging.
     """
 
-    averaged_weights = deepcopy(
-        client_weights[0]
+    aggregated_weights = deepcopy(
+        client_weight_dicts[0]
     )
 
-    for key in averaged_weights.keys():
+    for parameter_name in aggregated_weights.keys():
 
-        for i in range(1, len(client_weights)):
+        for client_idx in range(
+            1,
+            len(client_weight_dicts)
+        ):
 
-            averaged_weights[key] += (
-                client_weights[i][key]
+            aggregated_weights[parameter_name] += (
+                client_weight_dicts[client_idx][parameter_name]
             )
 
-        averaged_weights[key] /= len(
-            client_weights
+        aggregated_weights[parameter_name] /= len(
+            client_weight_dicts
         )
 
-    return averaged_weights
-
+    return aggregated_weights
 
 # --------------------------------------------------
 # Evaluation
@@ -198,9 +205,14 @@ def train_fedavg(client_data, test_dataset):
                 global_model
             )
 
-            local_state_dict = train_client(
+            local_state_dict, avg_loss = train_client(
                 local_model,
                 client_data[client_id]["train"],
+            )
+
+            print(
+                f"Average training loss: "
+                f"{avg_loss:.4f}"
             )
 
             client_weights.append(
@@ -222,7 +234,7 @@ def train_fedavg(client_data, test_dataset):
 
         print(
             f"Global accuracy: "
-            f"{100*accuracy:.2f}%"
+            f"{100 * accuracy:.2f}%"
         )
 
     return global_model
@@ -269,5 +281,5 @@ if __name__ == "__main__":
 
     print(
         f"\nFinal test accuracy: "
-        f"{100*final_accuracy:.2f}%"
+        f"{100 * final_accuracy:.2f}%"
     )
