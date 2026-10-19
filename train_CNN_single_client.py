@@ -25,7 +25,7 @@ from model_v2 import create_model
 
 DATASET_NAME = "CIFAR10"
 
-NUM_EPOCHS = 100
+NUM_EPOCHS = 50
 
 BATCH_SIZE = 64
 LEARNING_RATE = 0.01
