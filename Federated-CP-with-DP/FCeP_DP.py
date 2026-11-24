@@ -147,7 +147,7 @@ def fcep_dp_e_values(test_scores, calibration):
     # Compute the privatized federated e-values.
     e_values = (
         (N + K) * test_scores / A
-        - (4 * K * S_max**2) / (eps**2 * (A - K * T)**2)
+        * (1 + (4 * K * S_max**2) / (eps**2 * (A - K * T)**2))**(-1)
     )
 
     return e_values
